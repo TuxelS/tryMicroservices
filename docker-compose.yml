@@ -1,0 +1,55 @@
+# docker-compose.yml
+
+services:
+  liquibase:
+    image: liquibase-service
+    container_name: liquibase
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://host.docker.internal:5432/microservices
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # Только для Linux
+    networks:
+      - app-network
+
+
+  user-service:
+    image: user-service
+    container_name: user-service
+    ports:
+      - "8081:8081"  # (порт с пк):(порт контейнера)
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://host.docker.internal:5432/microservices
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      NOTIFICATION_SERVICE_URL: http://notification-service:8082
+    depends_on:
+      - liquibase
+      - notification-service
+    networks:
+      - app-network
+
+
+  notification-service:
+    image: notification-service
+    container_name: notification-service
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://host.docker.internal:5432/microservices
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # Только для Linux
+    networks:
+      - app-network
+    depends_on:
+      - liquibase
+
+# Сеть, чтобы контейнеры могли видеть друг друга
+networks:
+  app-network:
+    driver: bridge
