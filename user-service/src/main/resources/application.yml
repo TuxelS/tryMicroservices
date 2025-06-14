@@ -2,8 +2,10 @@ server:
   port: 8081
 
 spring:
+  application:
+    name: user-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/microservices
+    url: jdbc:postgresql://postgres-db:5432/microservices
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
@@ -11,3 +13,5 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: none
+
+

@@ -1,31 +1,51 @@
 # docker-compose.yml
 
 services:
+  postgres-db:
+    image: postgres:16
+    container_name: postgres-16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: microservices
+    ports:
+      - "5438:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./liquibase/changelog:/liquibase/changelog
+    networks:
+      - app-network
+    restart: unless-stopped
+
   liquibase:
-    image: liquibase-service
+    build:
+      context: ./liquibase-service
+      dockerfile: Dockerfile
     container_name: liquibase
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://host.docker.internal:5432/microservices
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/microservices
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
-    extra_hosts:
-      - "host.docker.internal:host-gateway"  # Только для Linux
+    depends_on:
+      - postgres-db
     networks:
       - app-network
 
 
   user-service:
-    image: user-service
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
     container_name: user-service
     ports:
       - "8081:8081"  # (порт с пк):(порт контейнера)
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - "5005:5005" # порт для отладки
+    env_file:
+      - .env
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://host.docker.internal:5432/microservices
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/microservices
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
-      NOTIFICATION_SERVICE_URL: http://notification-service:8082
     depends_on:
       - liquibase
       - notification-service
@@ -34,22 +54,27 @@ services:
 
 
   notification-service:
-    image: notification-service
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile
     container_name: notification-service
     ports:
       - "8082:8082"
+      - "5006:5006"
+    env_file:
+      - .env
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://host.docker.internal:5432/microservices
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/microservices
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
-    extra_hosts:
-      - "host.docker.internal:host-gateway"  # Только для Linux
     networks:
       - app-network
     depends_on:
       - liquibase
 
-# Сеть, чтобы контейнеры могли видеть друг друга
 networks:
   app-network:
     driver: bridge
+
+volumes:
+  postgres_data:
