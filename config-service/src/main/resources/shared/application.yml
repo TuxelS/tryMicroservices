@@ -1,0 +1,29 @@
+#автоматически применяется ко всем микросервисам
+---
+spring:
+  config:
+    activate:
+      on-profile: db
+  datasource:
+    url: jdbc:postgresql://postgres-db:5432/microservices
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: validate
+---
+spring:
+  config:
+    activate:
+      on-profile: mail-serv
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: antonbelov.0320@gmail.com
+    password: prpcanktauuxzniv
+    properties:
+      "mail.smtp.auth": true
+      "mail.smtp.starttls.enable": true
+---

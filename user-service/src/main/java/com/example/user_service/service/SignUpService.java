@@ -12,13 +12,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class SignUpService {
 
     private final UserRepository userRepository;
     private final NotificationServiceClient notificationServiceClient;
 
-
+    @Transactional(rollbackFor = Exception.class)
     public UserEntity saveNewUser(UserEntity userEntity) {
         if(userRepository.existsByEmail(userEntity.getEmail())){
             throw new DuplicateUserException("Этот email уже занят.");

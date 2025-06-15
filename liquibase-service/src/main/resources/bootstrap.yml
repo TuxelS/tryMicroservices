@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: liquibase-service
+    profiles:
+      include: db
+  cloud:
+    config:
+      uri: http://config-service:8888
+      fail-fast: true
+      retry:
+        initial-interval: 2000
+        max-interval: 10000
+        max-attempts: 10
